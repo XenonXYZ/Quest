@@ -76,10 +76,6 @@ class AddTaskViewController: UIViewController, UITextFieldDelegate {
             self.dismissViewControllerAnimated(true, completion: nil)
             self.mainVC.tableView.reloadData()
         }
-        
-//        // Go back to main VC
-//        self.dismissViewControllerAnimated(true, completion: nil)
-//        mainVC.tableView.reloadData()
     }
     
     override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {

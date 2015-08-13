@@ -23,6 +23,8 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     @IBOutlet weak var signupView: UIView!
     var friendVC = FriendViewController()
     @IBOutlet weak var friendView: UIView!
+    var currentView: UIView!
+    var isAnimating = false
     
     var currentTaskArray: [Task] = []
     var currentTodoTaskArray: [Task] = []
@@ -36,14 +38,14 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
+        self.currentView = tableView    
+        
         if let user = PFUser.currentUser() {
             if Reachability.isConnectedToNetwork() {
-                friendView.hidden = false
-                loginView.hidden = true
-                signupView.hidden = true
+                self.view.bringSubviewToFront(friendView)
             }
         } else {
-            self.friendView.hidden = true
+            self.view.bringSubviewToFront(loginView)
         }
         
         self.view.backgroundColor = backgroundColor
@@ -60,17 +62,18 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         titleGradient.endPoint = CGPoint(x: 0, y: 1)
         
         titleView.layer.insertSublayer(titleGradient, atIndex: 0)
-        
+        self.tableView.reloadData()
         // Setup View order
-        //self.view.bringSubviewToFront(tableView)
+        self.view.bringSubviewToFront(tableView)
     }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         
         reloadLocaldatastore()
-//        self.tableView.reloadSections(NSIndexSet(indexesInRange: NSMakeRange(0, tableView.numberOfSections())), withRowAnimation: UITableViewRowAnimation.Right)
         tableView.reloadData()
+        var set = NSIndexSet(indexesInRange: NSMakeRange(0, self.currentNumberOfSections))
+        self.tableView.reloadSections(set, withRowAnimation: UITableViewRowAnimation.Left)
         self.tableView.userInteractionEnabled = true
     }
 
@@ -86,40 +89,85 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     // MARK: View loads
     
     @IBAction func listButtonTapped(sender: UIButton) {
-        self.tableView.hidden = false
-        self.tableView.reloadData()
-        self.profileView.hidden = true
-        self.loginView.hidden = true
-        self.signupView.hidden = true
-        self.friendView.hidden = true
-    }
-    
-    @IBAction func profileButtonTapped(sender: UIButton) {
-        self.profileView.hidden = false
-        self.profileVC.updateSelf()
-        self.tableView.hidden = true
-        self.loginView.hidden = true
-        self.signupView.hidden = true
-        self.friendView.hidden = true
-    }
-    
-    @IBAction func socialButtonPressed(sender: UIButton) {
-        if let user = PFUser.currentUser() {
-            self.friendView.hidden = false
-            self.loginView.hidden = true
-            self.signupView.hidden = true
-            self.profileView.hidden = true
-            self.tableView.hidden = true
-        } else {
-            self.loginVC.viewDidLoad()
-            self.loginView.hidden = false
-            self.friendView.hidden = true
-            self.profileView.hidden = true
-            self.tableView.hidden = true
-            self.signupView.hidden = true
+        println(isAnimating)
+        if !isAnimating {
+            isAnimating = true
+            if currentView != tableView {
+                self.view.bringSubviewToFront(tableView)
+                self.view.bringSubviewToFront(currentView)
+                self.tableView.hidden = false
+                slideViewOut(self.currentView, closure: { () -> Void in
+                    self.view.bringSubviewToFront(self.tableView)
+                    self.tableView.reloadData()
+                })
+                
+                currentView = tableView
+            }
         }
     }
     
+    @IBAction func profileButtonTapped(sender: UIButton) {
+        println(isAnimating)
+        if !isAnimating {
+            isAnimating = true
+            if currentView != profileView {
+                self.view.bringSubviewToFront(profileView)
+                self.view.bringSubviewToFront(currentView)
+                self.profileView.hidden = false
+                slideViewOut(self.currentView, closure: { () -> Void in
+                    self.view.bringSubviewToFront(self.profileView)
+                    self.profileVC.updateSelf()
+                })
+                
+                currentView = profileView
+            }
+        }
+    }
+    
+    @IBAction func socialButtonPressed(sender: UIButton) {
+        if !isAnimating {
+            isAnimating = true
+            if let user = PFUser.currentUser() {
+                if currentView != friendView {
+                    self.view.bringSubviewToFront(friendView)
+                    self.view.bringSubviewToFront(currentView)
+                    slideViewOut(self.currentView, closure: { () -> Void in
+                        self.view.bringSubviewToFront(self.friendView)
+                    })
+                    
+                    currentView = friendView
+                }
+            } else {
+                if currentView != loginView {
+                    self.view.bringSubviewToFront(loginView)
+                    self.view.bringSubviewToFront(currentView)
+                    slideViewOut(self.currentView, closure: { () -> Void in
+                        self.view.bringSubviewToFront(self.loginView)
+                    })
+                    
+                    currentView = loginView
+                }
+            }
+        }
+        
+    }
+    
+    // MARK: Animations
+    func slideViewOut(animateView: UIView, closure: () -> Void) {
+        
+        var initialTransform = animateView.transform
+        var newTransform = CGAffineTransformMakeTranslation(self.view.frame.width, 0)
+        
+        UIView.animateWithDuration(0.5, animations: {
+            animateView.transform = newTransform
+            }) { (bool) -> Void in
+                closure()
+                animateView.transform = initialTransform
+                self.isAnimating = false
+                println(self.isAnimating)
+        }
+        
+    }
     
     // MARK: TableView
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
@@ -193,6 +241,12 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         cell.dateLabel.text = thisTask.date
         cell.backgroundColor = UIColor ( red: 0.9963, green: 1.0, blue: 0.8358, alpha: 1.0 )
         
+        if !thisTask.completed {
+             cell.taskImage.image = UIImage(named: "Sword")
+        } else {
+            cell.taskImage.image = UIImage(named: "Shield")
+        }
+        
         // Gesture Controller
         var sgr = UISwipeGestureRecognizer(target: self, action: Selector("cellSwipedRight:"))
         sgr.direction = UISwipeGestureRecognizerDirection.Right
@@ -207,6 +261,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             var animation = CATransform3DMakeAffineTransform(transform)
             
             var cell = gestureRecognizer.view as! TaskCell
+            var initialTransform = cell.transform
             
             UIView.animateWithDuration(0.25, delay: 0.0, options: UIViewAnimationOptions.CurveEaseOut, animations: { () -> Void in
                     cell.transform = transform
@@ -221,7 +276,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
                     
                     // Update the cell to switch
                     cell.removeGestureRecognizer(cell.gestureRecognizers![0] as! UIGestureRecognizer)
-                    self.switchTaskCompletion(indexPath)
+                    self.switchTaskCompletion(indexPath, cell: cell, initialTransform: initialTransform)
 
             }
         }
@@ -300,10 +355,15 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         thisTask.deleteInBackground()
         thisTask.unpinInBackgroundWithBlock { (success, error) -> Void in
             self.reloadLocaldatastore()
-            self.tableView.reloadData()
+            UIView.transitionWithView(self.tableView,
+                duration:0.30,
+                options:UIViewAnimationOptions.TransitionCrossDissolve,
+                animations:
+                { () -> Void in
+                    self.tableView.reloadData()
+                },
+                completion: nil)
         }
-//        reloadLocaldatastore()
-//        tableView.reloadData()
     }
     
     func switchTaskCompletion(indexPath: NSIndexPath) {
@@ -321,7 +381,41 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         thisTask.completed = !thisTask.completed
         thisTask.pinInBackgroundWithBlock { (success, error) -> Void in
             self.reloadLocaldatastore()
-            self.tableView.reloadData()
+            UIView.transitionWithView(self.tableView,
+                duration:0.35,
+                options:.TransitionCrossDissolve,
+                animations:
+                { () -> Void in
+                    self.tableView.reloadData()
+                },
+                completion: nil);
+        }
+    }
+    
+    func switchTaskCompletion(indexPath: NSIndexPath, cell: UITableViewCell, initialTransform: CGAffineTransform) {
+        var thisTask = Task()
+        
+        var currentSection = getSection(indexPath.section)
+        if currentSection == "To do" {
+            thisTask = currentTodoTaskArray[indexPath.row]
+        } else if currentSection == "Completed" {
+            thisTask = currentCompletedTaskArray[indexPath.row]
+        } else {
+            println("ERROR ERROR MUST READ!")
+        }
+        
+        thisTask.completed = !thisTask.completed
+        thisTask.pinInBackgroundWithBlock { (success, error) -> Void in
+            self.reloadLocaldatastore()
+            UIView.transitionWithView(self.tableView,
+                duration:0.30,
+                options:UIViewAnimationOptions.TransitionCrossDissolve,
+                animations:
+                { () -> Void in
+                    self.tableView.reloadData()
+                    cell.transform = initialTransform
+                },
+                completion: nil)
         }
     }
     

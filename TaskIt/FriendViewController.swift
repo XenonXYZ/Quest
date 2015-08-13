@@ -13,11 +13,8 @@ class FriendViewController: UIViewController, UITableViewDataSource, UITableView
 
     var mainVC: ViewController!
     @IBOutlet weak var friendTextField: UITextField!
-    @IBOutlet weak var successLabel: UILabel!
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var noInternetView: UIView!
-    
-    var friendArray: [PFUser] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -58,11 +55,9 @@ class FriendViewController: UIViewController, UITableViewDataSource, UITableView
         if Reachability.isConnectedToNetwork() {
             println("INTERNET IS BACK!!!!")
             noInternetView.hidden = true
-            let query = PFUser.query()
-            self.friendArray = query?.findObjects() as! [PFUser]
             self.tableView.reloadData()
         } else {
-            var alert = UIAlertView(title: "Please connect to the internet", message: "An internet connection is requred to look at friends", delegate: self, cancelButtonTitle: nil)
+            var alert = UIAlertView(title: "Please connect to the internet", message: "An internet connection is requred to look at friends.", delegate: self, cancelButtonTitle: nil)
             noInternetView.hidden = false
             self.view.bringSubviewToFront(noInternetView)
             println("hahahhaha")
@@ -89,22 +84,13 @@ class FriendViewController: UIViewController, UITableViewDataSource, UITableView
             
             if var friendUser = query?.getFirstObject() as? PFUser {
                 if friendUser.username != PFUser.currentUser()?.username {
-                    successLabel.hidden = false
-                    successLabel.text = friendUser.username
-                    PFUser.currentUser()?.addUniqueObject(friendUser, forKey: "Friends")
+                    PFUser.currentUser()?.addUniqueObject(friendUser.username!, forKey: "friends")
                     PFUser.currentUser()?.save()
                     tableView.reloadData()
-                } else {
-                    successLabel.hidden = false
-                    successLabel.text = "Username invalid"
                 }
-            } else {
-                successLabel.hidden = false
-                successLabel.text = "Username invalid"
             }
         } else {
             noInternetView.hidden = false
-            
         }
     }
     
@@ -118,11 +104,10 @@ class FriendViewController: UIViewController, UITableViewDataSource, UITableView
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        
-            var count = 0
+        var count = 0
         
         if Reachability.isConnectedToNetwork() {
-            let friendArray: NSArray? = PFUser.currentUser()?.objectForKey("Friends") as? NSArray
+            let friendArray: NSArray? = PFUser.currentUser()?.objectForKey("friends") as? NSArray
             
             if let arr = friendArray {
                 println("\(arr.count) asdasdasd")
@@ -140,11 +125,23 @@ class FriendViewController: UIViewController, UITableViewDataSource, UITableView
         
         var cell: FriendCell = tableView.dequeueReusableCellWithIdentifier("friendCell") as! FriendCell
         cell.selectionStyle = UITableViewCellSelectionStyle.None
-
-        println("well well")
-        cell.usernameLabel.text = friendArray[indexPath.row].objectForKey("username") as? String
-        println("and this is the crash")
-        cell.backgroundColor = backgroundColor
+        
+        let friendArray: NSArray? = PFUser.currentUser()?.objectForKey("friends") as? NSArray
+        var query = PFUser.query()
+        var friendString = friendArray![indexPath.row] as! String
+        query?.whereKey("username", equalTo: friendString)
+        
+        var friend: PFUser = query?.findObjects()?.first as! PFUser
+        
+        println("Got the array")
+        if friendArray != [] {
+            var username = friend.username
+            cell.usernameLabel.text = username
+            var level = friend.objectForKey("level") as! Int
+            cell.levelLabel.text = "level: \(level)"
+            cell.rankImageView.image = LevelController.getImageForGivenLevel(level)
+            cell.backgroundColor = backgroundColor
+        }
         
         return cell
     }

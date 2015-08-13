@@ -36,7 +36,7 @@ class ProfileViewController: UIViewController {
         }
         
         self.titleLabel.text = LevelController.getTitleForLevelText()
-        self.rankImage.image = LevelController.getImageForLeve()
+        self.rankImage.image = LevelController.getImageForLevel()
         self.tasksRemainingLabel.text = "tasks until next level: \(LevelController.getTasksRemaining())"
         self.levelLabel.text = "Level \(NSUserDefaults.standardUserDefaults().integerForKey(kLevelKey))"
         self.experienceRemainingLabel.text = "Experience: \(NSUserDefaults.standardUserDefaults().integerForKey(kExperienceKey))/\(LevelController.getTotalExperience())"

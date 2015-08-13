@@ -12,7 +12,7 @@ import Bolts
 
 let kVersionNumber = "1.0"
 let kLoadedOnceKey = "loadedOnce"
-let backgroundColor = UIColor(red:0.8862, green:1.0, blue:0.9119, alpha:1.0)
+let backgroundColor = UIColor(red:0.8594, green:1.0, blue:0.8895, alpha:1.0)
 var currentUsername = "username"
 let kLevelKey = "level"
 let kExperienceKey = "experience"
@@ -24,13 +24,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
-        
-        if NSUserDefaults.standardUserDefaults().boolForKey(kLoadedOnceKey) == false {
-            NSUserDefaults.standardUserDefaults().setBool(true, forKey: kLoadedOnceKey)
-            NSUserDefaults.standardUserDefaults().setInteger(1, forKey: kLevelKey)
-            NSUserDefaults.standardUserDefaults().setInteger(0, forKey: kExperienceKey)
-            NSUserDefaults.standardUserDefaults().synchronize()
-        }
         
         // Initialize Parse.
         Task.registerSubclass()
@@ -46,6 +39,50 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             currentUsername = user.username!
             if Reachability.isConnectedToNetwork() {
                 ParseController.receiveTasks()
+            }
+        }
+        
+        if NSUserDefaults.standardUserDefaults().boolForKey(kLoadedOnceKey) == false {
+            NSUserDefaults.standardUserDefaults().setBool(true, forKey: kLoadedOnceKey)
+            NSUserDefaults.standardUserDefaults().setInteger(1, forKey: kLevelKey)
+            NSUserDefaults.standardUserDefaults().setInteger(0, forKey: kExperienceKey)
+            NSUserDefaults.standardUserDefaults().synchronize()
+            
+            var taskArray = [Task(), Task(), Task(), Task(), Task(), Task()]
+            
+            taskArray[0].name = "Tap me!"
+            taskArray[0].subtask = "Get more information \r Tap each quest to learn more about the app. Quest will help you complete your tasks by treating them like a game!"
+            taskArray[1].name = "Add a quest!"
+            taskArray[1].subtask = "Press the plus button"
+            taskArray[2].name = "Complete a quest"
+            taskArray[2].subtask = "Swipe right to complete a quest. \r You can always uncomplete it by swiping again if you want to redo it later."
+            taskArray[3].name = "Delete one!"
+            taskArray[3].subtask = "Swipe left"
+            taskArray[4].name = "View your profile"
+            taskArray[4].subtask = "Check your stats there! \r Your rank information will be displayed, along with your experience points. Each completed task will give you 10 experience points!"
+            taskArray[5].name = "Add friends"
+            taskArray[5].subtask = "Create an account \r This is optional, but will enable you to add your friends to see their stats. You will also be able to sync your quests across multiple devices."
+            
+            for newTask in taskArray {
+                newTask.date = Date.toDisplayString(date: NSDate().dateByAddingTimeInterval(3600))
+                newTask.notificationDate = Date.toExactString(date: NSDate().dateByAddingTimeInterval(3600))
+                newTask.createdBy = currentUsername
+                newTask.completed = false
+                
+                //Set up notifications
+                var idString = NSUUID().UUIDString
+                var notification = UILocalNotification()
+                notification.alertBody = newTask.name.capitalizedString
+                notification.fireDate = NSDate().dateByAddingTimeInterval(3600)
+                notification.soundName = UILocalNotificationDefaultSoundName
+                notification.category = "TODO_CATEGORY"
+                notification.userInfo = ["UUID": idString]
+                UIApplication.sharedApplication().scheduleLocalNotification(notification)
+                
+                // Update local info
+                newTask.notificationUUID = idString
+                newTask.pin()
+                println("pinning")
             }
         }
         

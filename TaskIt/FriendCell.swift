@@ -9,11 +9,10 @@
 import UIKit
 
 class FriendCell: UITableViewCell {
-
-    @IBOutlet weak var picView: UIView!
     
     @IBOutlet weak var usernameLabel: UILabel!
     @IBOutlet weak var levelLabel: UILabel!
+    @IBOutlet weak var rankImageView: UIImageView!
     
     override func awakeFromNib() {
         super.awakeFromNib()

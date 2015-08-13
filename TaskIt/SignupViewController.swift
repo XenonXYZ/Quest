@@ -64,6 +64,7 @@ class SignupViewController: UIViewController, UITextFieldDelegate {
                 newUser.email = email
                 newUser["level"] = NSUserDefaults.standardUserDefaults().integerForKey(kLevelKey)
                 newUser["experience"] = NSUserDefaults.standardUserDefaults().integerForKey(kExperienceKey)
+                newUser["friends"] = []
                 
                 newUser.signUpInBackgroundWithBlock({ (succeed, error) -> Void in
                     self.actInd.stopAnimating()
@@ -76,6 +77,7 @@ class SignupViewController: UIViewController, UITextFieldDelegate {
                         self.mainVC.friendView.hidden = false
                         self.mainVC.signupView.hidden = true
                         self.mainVC.profileVC.updateProfile()
+                        self.mainVC.friendVC.updateFriends()
                         var alert = UIAlertView(title: "Success", message: "Signed up", delegate: self, cancelButtonTitle: "OK")
                         alert.show()
                     }

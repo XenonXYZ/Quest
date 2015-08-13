@@ -104,11 +104,43 @@ class LevelController {
         return levelTitle
     }
     
-    class func getImageForLeve() -> UIImage {
+    class func getImageForLevel() -> UIImage {
         var currentImage = UIImage(named: "1Level")
         var currentLevel = NSUserDefaults.standardUserDefaults().integerForKey(kLevelKey)
         
         switch currentLevel {
+        case 1:
+            currentImage = UIImage(named: "1Level")
+        case 2:
+            currentImage = UIImage(named: "2Level")
+        case 3:
+            currentImage = UIImage(named: "3Level")
+        case 4:
+            currentImage = UIImage(named: "4Level")
+        case 5:
+            currentImage = UIImage(named: "5Level")
+        case 6:
+            currentImage = UIImage(named: "6Level")
+        case 7:
+            currentImage = UIImage(named: "7Level")
+        case 8:
+            currentImage = UIImage(named: "8Level")
+        case 9:
+            currentImage = UIImage(named: "9Level")
+        case 10:
+            currentImage = UIImage(named: "10Level")
+        default:
+            println("Error unknown level reached")
+        }
+        
+        return currentImage!
+        
+    }
+    
+    class func getImageForGivenLevel(level: Int) -> UIImage {
+        var currentImage: UIImage!
+        
+        switch level {
         case 1:
             currentImage = UIImage(named: "1Level")
         case 2:

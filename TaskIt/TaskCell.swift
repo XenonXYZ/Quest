@@ -11,6 +11,7 @@ import UIKit
 class TaskCell: UITableViewCell {
 
     
+    @IBOutlet weak var taskImage: UIImageView!
     @IBOutlet weak var taskLabel: UILabel!
     @IBOutlet weak var dateLabel: UILabel!
     @IBOutlet weak var descriptionLabel: UILabel!

@@ -72,6 +72,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                             self.mainVC.loginView.hidden = true
                             self.mainVC.friendView.hidden = false
                             self.mainVC.profileVC.updateProfile()
+                            self.mainVC.friendVC.updateFriends()
                             
                         }
                     } else {
